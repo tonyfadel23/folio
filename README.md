@@ -31,14 +31,24 @@ Built with SwiftUI + WKWebView. The release `.app` is ~0.5 MB and has **no runti
 
 ## Install
 
-Download the latest `Folio-x.y.z.dmg` from the [Releases page](https://github.com/tonyfadel23/folio/releases/latest), open it, and drag **Folio** to your `Applications` folder.
+### Homebrew (recommended)
 
-> **First launch on macOS:** Folio is free and open source, but it isn't yet signed with an Apple Developer ID (signing requires a paid Apple account). The first time you open it, macOS will refuse with *"Folio can't be opened because it is from an unidentified developer."* To bypass:
+```bash
+brew install --cask tonyfadel23/tap/folio
+```
+
+Homebrew strips the macOS quarantine bit automatically, so Folio launches on first run without the Gatekeeper "unidentified developer" prompt. To upgrade: `brew upgrade --cask folio`.
+
+### Direct download
+
+Grab the latest `Folio-x.y.z.dmg` from the [Releases page](https://github.com/tonyfadel23/folio/releases/latest), open it, and drag **Folio** to your `Applications` folder.
+
+> **First launch on macOS:** Folio is free and open source, but it isn't yet signed with an Apple Developer ID. The first time you open it, macOS will refuse with *"Folio can't be opened because it is from an unidentified developer."* To bypass:
 >
 > 1. In Finder, **right-click** `Folio.app` → **Open** → **Open** in the confirmation dialog. Do this once; afterwards it launches normally.
 > 2. Or, from Terminal: `xattr -dr com.apple.quarantine /Applications/Folio.app`
 >
-> If you'd prefer to build from source, the only requirement is Swift — see below.
+> (Installing via Homebrew avoids this entirely.)
 
 ## Requirements
 
