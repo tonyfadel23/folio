@@ -3,6 +3,17 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] — 2026-06-21
+
+UX polish: more visible copy feedback, and the raw/rendered toggle is now per-file.
+
+- **Copy toast.** Clicking the "Copy" button on a code block now also shows a centered toast at the top of the preview (in addition to the in-place "Copied" label flicker). Long code blocks scroll the button off-screen — the toast guarantees the user always sees the confirmation. Auto-dismisses after ~1.4s. Dark-mode toast lifts the background so it stays visible against the dark page.
+- **Per-file raw / rendered.** The Formatted ↔ Raw picker now remembers its state per file. In tab mode: flip a file to Raw, switch to another tab, switch back — your Raw choice is preserved. In single mode: same — every file remembers its own toggle until you close the folder.
+- **State storage.** Added `AppModel.rawStates: [URL: Bool]`, keyed by file URL. Cleared on folder change (so new folders start fresh) and pruned per-tab on `closeTab` (so the map stays bounded).
+- **Settings persistence (no change, just confirmed).** Appearance, tab mode, and show-hidden are already persisted to `~/Library/Preferences/com.tonyfadel.folio.plist` via UserDefaults and restored in `AppModel.init`. If you see resets during local dev, that's `cfprefsd` caching — `killall cfprefsd` flushes it. Brew-installed users don't see this.
+
+[1.5.0]: https://github.com/tonyfadel23/folio/releases/tag/v1.5.0
+
 ## [1.4.0] — 2026-06-21
 
 In-app update check.

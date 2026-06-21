@@ -70,6 +70,11 @@ final class AppModel: ObservableObject {
     /// `selection` is the active tab; closing it picks the neighboring tab as the new active.
     @Published var openTabs: [FileNode] = []
 
+    /// Per-file raw/rendered toggle state, keyed by URL. Lets each file (including each
+    /// open tab) remember independently whether the user wants Formatted or Raw view, so
+    /// switching tabs preserves each tab's mode. Cleared on folder change.
+    @Published var rawStates: [URL: Bool] = [:]
+
     /// URLs of folders currently expanded in the sidebar tree. Kept here (not in OutlineGroup)
     /// so taps can toggle expansion and so expansion survives tree reloads.
     @Published var expandedFolders: Set<URL> = []
@@ -123,6 +128,7 @@ final class AppModel: ObservableObject {
         guard let idx = openTabs.firstIndex(where: { $0.url == tab.url }) else { return }
         let wasActive = (selection?.url == tab.url)
         openTabs.remove(at: idx)
+        rawStates.removeValue(forKey: tab.url)   // closed tab's raw/rendered state is no longer interesting
         guard wasActive else { return }
         if openTabs.isEmpty {
             selection = nil
@@ -164,6 +170,7 @@ final class AppModel: ObservableObject {
                 self.knownURLs = result.root.allURLs()
                 self.expandedFolders = [] // a freshly opened folder starts collapsed
                 self.openTabs = []        // new folder → fresh, empty tab set
+                self.rawStates = [:]      // new folder → drop any remembered raw/rendered toggles
                 self.selection = nil
                 self.isLoading = false
                 self.startWatching(url)

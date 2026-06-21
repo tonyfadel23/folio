@@ -39,6 +39,18 @@ func runPreviewHTMLTests() {
         T.contains(doc, "script-src 'unsafe-inline'")
     }
 
+    T.test("document's copy-button script surfaces a toast on success") {
+        let doc = PreviewHTML.document(title: "x", body: "<pre><code>let x = 1</code></pre>")
+        T.contains(doc, "showCopyToast")                 // toast helper exists
+        T.contains(doc, "Copied to clipboard")           // expected message
+        T.contains(doc, "navigator.clipboard.writeText") // still uses the clipboard API
+    }
+
+    T.test("stylesheet defines the .copy-toast class so the toast can fade in/out") {
+        T.contains(Styles.css, ".copy-toast")
+        T.contains(Styles.css, ".copy-toast.visible")
+    }
+
     T.test("escape neutralizes HTML metacharacters") {
         T.equal(PreviewHTML.escape("<a> & <b>"), "&lt;a&gt; &amp; &lt;b&gt;")
     }

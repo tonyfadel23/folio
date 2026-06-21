@@ -125,5 +125,39 @@ public enum Styles {
     hr { border: none; border-top: 1px solid var(--border); margin: 1.6em 0; }
     .nativemd-image-page { text-align: center; padding-top: 8px; }
     .nativemd-placeholder { color: var(--placeholder-fg); text-align: center; margin-top: 24vh; font-size: 1.05em; }
+
+    /* Floating toast shown briefly after the copy-code-block button fires.
+       Position: fixed so it sits above any code-block scroll container; pointer-events: none
+       so it never intercepts clicks; fade + slide via opacity/transform transitions. */
+    .copy-toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translate(-50%, -10px);
+        background: rgba(40, 40, 40, 0.92);
+        color: #ffffff;
+        padding: 8px 18px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 500;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease-out, transform 0.18s ease-out;
+        z-index: 9999;
+    }
+    .copy-toast.visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    /* In dark mode, lift the toast off the dark page background so it's still visible. */
+    body.theme-dark .copy-toast {
+        background: rgba(80, 80, 82, 0.95);
+    }
+    @media (prefers-color-scheme: dark) {
+        body.theme-system .copy-toast {
+            background: rgba(80, 80, 82, 0.95);
+        }
+    }
     """
 }

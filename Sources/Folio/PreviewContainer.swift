@@ -6,8 +6,6 @@ struct PreviewContainer: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var controller: PreviewController
     @FocusState private var findFocused: Bool
-    /// false = rendered (Formatted/Website), true = raw source (Raw/Code).
-    @State private var raw = false
 
     /// Rendered/raw labels for the current file, or nil if its kind has no toggle.
     private var toggle: (rendered: String, raw: String)? {
@@ -22,6 +20,22 @@ struct PreviewContainer: View {
         return kind == .markdown || kind == .html
     }
 
+    /// Current file's raw/rendered state, looked up in `AppModel.rawStates`.
+    /// Defaults to `false` (rendered) for files never toggled.
+    private var currentRaw: Bool {
+        guard let url = model.selectedFile?.url else { return false }
+        return model.rawStates[url] ?? false
+    }
+
+    /// Binding that reads/writes `rawStates[currentURL]`. Decoupling from a local @State
+    /// means switching tabs (or sidebar files) preserves each file's mode independently.
+    private func rawBinding(for url: URL) -> Binding<Bool> {
+        Binding(
+            get: { model.rawStates[url] ?? false },
+            set: { model.rawStates[url] = $0 }
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             if model.openInTabs && !model.openTabs.isEmpty {
@@ -34,15 +48,15 @@ struct PreviewContainer: View {
             }
             PreviewPane(file: model.selectedFile,
                         reloadToken: model.reloadToken,
-                        raw: raw,
+                        raw: currentRaw,
                         theme: model.appearance,
                         controller: controller)
         }
         .toolbar {
             // Right-aligned on the title-bar line; only shown when relevant to the file.
             ToolbarItemGroup(placement: .primaryAction) {
-                if let toggle {
-                    Picker("View", selection: $raw) {
+                if let toggle, let file = model.selectedFile {
+                    Picker("View", selection: rawBinding(for: file.url)) {
                         Text(toggle.rendered).tag(false)
                         Text(toggle.raw).tag(true)
                     }
@@ -60,7 +74,6 @@ struct PreviewContainer: View {
                 }
             }
         }
-        .onChange(of: model.selectedFile) { _ in raw = false } // each file starts in rendered mode
         .onChange(of: controller.findVisible) { visible in
             if visible { findFocused = true }
         }

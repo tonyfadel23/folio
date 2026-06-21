@@ -206,22 +206,43 @@ public struct PreviewHTML {
     }
 
     /// JS that adds a "Copy" button to every `<pre>` block, using the clipboard API.
+    /// Successful copies trigger an in-place "Copied" label on the button *and* a centered
+    /// toast at the top of the preview pane (more visible than the button-label flicker
+    /// alone, especially for long code blocks where the button scrolls off-screen).
     private static let copyButtonScript = """
-    document.addEventListener('DOMContentLoaded', function () {
-      document.querySelectorAll('pre').forEach(function (pre) {
-        var btn = document.createElement('button');
-        btn.className = 'copy-btn';
-        btn.textContent = 'Copy';
-        btn.addEventListener('click', function () {
-          var code = pre.innerText;
-          navigator.clipboard.writeText(code).then(function () {
-            btn.textContent = 'Copied';
-            setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+    (function () {
+      function showCopyToast(message) {
+        var prior = document.querySelector('.copy-toast');
+        if (prior) prior.remove();
+        var toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        // Defer adding the .visible class so the fade-in transition actually plays.
+        requestAnimationFrame(function () { toast.classList.add('visible'); });
+        setTimeout(function () {
+          toast.classList.remove('visible');
+          setTimeout(function () { toast.remove(); }, 220);
+        }, 1400);
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('pre').forEach(function (pre) {
+          var btn = document.createElement('button');
+          btn.className = 'copy-btn';
+          btn.textContent = 'Copy';
+          btn.addEventListener('click', function () {
+            var code = pre.innerText;
+            navigator.clipboard.writeText(code).then(function () {
+              btn.textContent = 'Copied';
+              setTimeout(function () { btn.textContent = 'Copy'; }, 1200);
+              showCopyToast('Copied to clipboard');
+            });
           });
+          pre.appendChild(btn);
         });
-        pre.appendChild(btn);
       });
-    });
+    })();
     """
 
     /// Escape the five HTML-significant characters for safe inclusion in markup/text.
