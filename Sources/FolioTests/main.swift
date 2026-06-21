@@ -16,6 +16,9 @@ runLinkPolicyTests()
 print("\nAppearance:")
 runAppearanceTests()
 
+print("\nUpdateCheck:")
+runUpdateCheckTests()
+
 print("\nPreviewHTML:")
 runPreviewHTMLTests()
 

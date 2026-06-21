@@ -7,6 +7,7 @@ import FolioCore
 /// so nested matches are visible without expanding folders.
 struct SidebarView: View {
     @EnvironmentObject private var model: AppModel
+    @StateObject private var updates = UpdateChecker()
     @State private var query = ""
     @State private var pendingDelete: FileNode?
     @State private var renameTarget: FileNode?
@@ -245,6 +246,7 @@ struct SidebarView: View {
                 Spacer()
                 Text("v\(AppInfo.version)").font(.subheadline).foregroundStyle(.secondary)
             }
+            updateRow
             Divider()
             VStack(alignment: .leading, spacing: 6) {
                 Text("Appearance").font(.subheadline)
@@ -271,6 +273,61 @@ struct SidebarView: View {
         }
         .padding(16)
         .frame(width: 320)
+    }
+
+    /// One-line update status: button to check on demand, spinner while in flight, then a
+    /// result + action. Never auto-checks; only hits GitHub when the user clicks.
+    @ViewBuilder
+    private var updateRow: some View {
+        HStack(spacing: 8) {
+            switch updates.state {
+            case .idle:
+                Button("Check for Updates") {
+                    Task { await updates.check(current: AppInfo.version) }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                Spacer()
+
+            case .checking:
+                ProgressView().controlSize(.small)
+                Text("Checking…").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+
+            case .result(.upToDate):
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                Text("You're on the latest version.")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button("Check Again") {
+                    Task { await updates.check(current: AppInfo.version) }
+                }
+                .buttonStyle(.borderless).controlSize(.small)
+
+            case .result(.updateAvailable(let latest, let url)):
+                Image(systemName: "arrow.up.circle.fill").foregroundStyle(.blue)
+                Text("v\(latest) is available.")
+                    .font(.caption)
+                Spacer()
+                Button("View") { NSWorkspace.shared.open(url) }
+                    .buttonStyle(.borderedProminent).controlSize(.small)
+
+            case .result(.ahead(let latest)):
+                Image(systemName: "hammer.fill").foregroundStyle(.secondary)
+                Text("Dev build (latest released: v\(latest)).")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+
+            case .failed(let message):
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                Text(message).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                Spacer()
+                Button("Retry") {
+                    Task { await updates.check(current: AppInfo.version) }
+                }
+                .buttonStyle(.borderless).controlSize(.small)
+            }
+        }
     }
 
     @ViewBuilder

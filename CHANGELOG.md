@@ -3,6 +3,20 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-06-21
+
+In-app update check.
+
+- New **"Check for Updates"** button in the Settings popover (alongside the version number). Click it to query GitHub for the latest release and compare it against the running build.
+- Three outcomes:
+  - **Up to date** → green checkmark + "You're on the latest version."
+  - **Update available** → blue arrow + "vX.Y.Z is available." + a **View** button that opens the release page in the user's default browser. From there the user can read the release notes and either `brew upgrade --cask folio` or download the DMG.
+  - **Dev build** (running newer than the latest release) → hammer icon + "Dev build (latest released: vX.Y.Z)" — useful when running from `swift run` or a local build.
+- Never auto-checks. Only contacts GitHub when the user clicks the button. The HTTPS request includes only a generic `User-Agent` (the app version) — no telemetry, no analytics.
+- Pure version-comparison + JSON decoding logic lives in `FolioCore.UpdateCheck` (testable, network-free); the URLSession call + UI live in the `Folio` target.
+
+[1.4.0]: https://github.com/tonyfadel23/folio/releases/tag/v1.4.0
+
 ## [1.3.0] — 2026-06-21
 
 Two new Settings: appearance (Light / Dark / System) and tab mode.
