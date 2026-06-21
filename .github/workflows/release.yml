@@ -8,6 +8,20 @@ on:
 permissions:
   contents: write
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Optional: auto-bump the Homebrew cask after a release.
+#
+# To enable, set the `TAP_REPO_TOKEN` repo secret to a *fine-grained* personal
+# access token scoped to `tonyfadel23/homebrew-tap` with:
+#   - Repository access: Only select repositories → homebrew-tap
+#   - Permissions: Contents → Read and Write
+#
+#   gh secret set TAP_REPO_TOKEN -R tonyfadel23/folio
+#
+# When unset, the "Update Homebrew tap" step skips with a warning so the
+# release still publishes successfully.
+# ─────────────────────────────────────────────────────────────────────────────
+
 jobs:
   release:
     name: Build DMG and create GitHub Release
@@ -27,13 +41,64 @@ jobs:
           test -f "Folio-${VERSION}.dmg"
           ls -lh "Folio-${VERSION}.dmg"
 
+      - name: Compute DMG checksum
+        id: dmg
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          SHA256="$(shasum -a 256 "Folio-${VERSION}.dmg" | awk '{print $1}')"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "sha256=${SHA256}" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          VERSION="$(tr -d '[:space:]' < VERSION)"
+          VERSION="${{ steps.dmg.outputs.version }}"
           TAG="${GITHUB_REF#refs/tags/}"
           gh release create "$TAG" \
             --title "Folio ${VERSION}" \
             --generate-notes \
             "Folio-${VERSION}.dmg"
+
+      - name: Check Homebrew tap auto-bump configuration
+        id: tap_config
+        env:
+          TAP_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+        run: |
+          if [[ -z "$TAP_TOKEN" ]]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::TAP_REPO_TOKEN secret is not set; skipping Homebrew tap auto-bump. See header comment in .github/workflows/release.yml for setup."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update Homebrew tap
+        if: steps.tap_config.outputs.configured == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.TAP_REPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.dmg.outputs.version }}"
+          SHA256="${{ steps.dmg.outputs.sha256 }}"
+
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/tonyfadel23/homebrew-tap.git" tap
+          cd tap
+
+          # Replace the two cask fields. BSD sed needs `-i ''`; macos-14 has GNU
+          # sed available as `gsed` but BSD sed comes pre-installed and works fine here.
+          sed -i.bak -E "s/^  version \".*\"$/  version \"${VERSION}\"/" Casks/folio.rb
+          sed -i.bak -E "s/^  sha256 \".*\"$/  sha256 \"${SHA256}\"/" Casks/folio.rb
+          rm Casks/folio.rb.bak
+
+          if git diff --quiet Casks/folio.rb; then
+            echo "Cask already at v${VERSION}; no commit needed."
+            exit 0
+          fi
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/folio.rb
+          git commit -m "folio ${VERSION}"
+          git push origin main
+
+          echo "::notice::Homebrew cask bumped to folio ${VERSION}."
