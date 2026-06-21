@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    name: Test + build app bundle
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Swift toolchain
+        run: swift --version
+
+      - name: Run tests
+        run: swift run NativeMdTests
+
+      - name: Build universal app bundle (smoke test)
+        run: bash scripts/bundle.sh
+
+      - name: Verify bundle layout
+        run: |
+          test -x Folio.app/Contents/MacOS/NativeMd
+          test -f Folio.app/Contents/Info.plist
+          lipo -archs Folio.app/Contents/MacOS/NativeMd | grep -q "x86_64 arm64\|arm64 x86_64"

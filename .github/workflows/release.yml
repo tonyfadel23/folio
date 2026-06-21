@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build DMG and create GitHub Release
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run tests before releasing
+        run: swift run NativeMdTests
+
+      - name: Build DMG
+        run: bash scripts/make_dmg.sh
+
+      - name: Verify DMG exists
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          test -f "Folio-${VERSION}.dmg"
+          ls -lh "Folio-${VERSION}.dmg"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="$(tr -d '[:space:]' < VERSION)"
+          TAG="${GITHUB_REF#refs/tags/}"
+          gh release create "$TAG" \
+            --title "Folio ${VERSION}" \
+            --generate-notes \
+            "Folio-${VERSION}.dmg"

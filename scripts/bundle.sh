@@ -59,8 +59,10 @@ cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
     <key>CFBundleShortVersionString</key> <string>${VERSION}</string>
     <key>CFBundlePackageType</key>     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>  <string>${MIN_OS}</string>
+    <key>LSApplicationCategoryType</key> <string>public.app-category.utilities</string>
     <key>NSPrincipalClass</key>        <string>NSApplication</string>
     <key>NSHighResolutionCapable</key> <true/>
+    <key>NSHumanReadableCopyright</key> <string>© 2026 Tony Fadel. MIT Licensed.</string>
 ${ICON_PLIST}
 </dict>
 </plist>

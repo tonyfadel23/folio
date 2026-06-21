@@ -1,5 +1,9 @@
 # Folio
 
+[![CI](https://github.com/tonyfadel23/folio/actions/workflows/ci.yml/badge.svg)](https://github.com/tonyfadel23/folio/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/tonyfadel23/folio)](https://github.com/tonyfadel23/folio/releases/latest)
+
 A super lightweight **native macOS file browser + previewer**. Pick a folder on the left;
 its files and subfolders show as an expandable tree (always on the left). Select a file and
 it previews on the right:
@@ -26,6 +30,17 @@ it previews on the right:
 
 Built with SwiftUI + WKWebView. The release `.app` is ~0.5 MB and has **no runtime dependencies**
 (the only library, [Ink](https://github.com/JohnSundell/Ink) for Markdown, is statically linked).
+
+## Install
+
+Download the latest `Folio-x.y.z.dmg` from the [Releases page](https://github.com/tonyfadel23/folio/releases/latest), open it, and drag **Folio** to your `Applications` folder.
+
+> **First launch on macOS:** Folio is free and open source, but it isn't yet signed with an Apple Developer ID (signing requires a paid Apple account). The first time you open it, macOS will refuse with *"Folio can't be opened because it is from an unidentified developer."* To bypass:
+>
+> 1. In Finder, **right-click** `Folio.app` → **Open** → **Open** in the confirmation dialog. Do this once; afterwards it launches normally.
+> 2. Or, from Terminal: `xattr -dr com.apple.quarantine /Applications/Folio.app`
+>
+> If you'd prefer to build from source, the only requirement is Swift — see below.
 
 ## Requirements
 
@@ -76,3 +91,25 @@ scripts/          # bundle.sh, run.sh, make_icon.swift, make_iconset.sh
 Command Line Tools (without full Xcode) does **not** ship XCTest, so `swift test` cannot run.
 Tests are therefore a plain executable target (`NativeMdTests`) with a tiny assertion harness,
 run via `swift run NativeMdTests` — same TDD workflow, no Xcode needed.
+
+## Releasing
+
+Releases are produced automatically by GitHub Actions when a `v*` tag is pushed:
+
+```bash
+# Bump VERSION, then:
+git tag v1.3.0
+git push origin v1.3.0
+```
+
+This triggers `.github/workflows/release.yml`, which runs the tests, builds the universal DMG via `scripts/make_dmg.sh`, and attaches it to a new GitHub Release with auto-generated notes from the commit log. See [`CHANGELOG.md`](CHANGELOG.md) for prior releases.
+
+## License
+
+Folio is released under the [MIT License](LICENSE). You're free to use, copy, modify, and distribute it — commercially or not — as long as the copyright notice is preserved.
+
+The bundled binary statically links [Ink](https://github.com/JohnSundell/Ink) for Markdown rendering. Ink's MIT license and copyright notice are reproduced in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) per its terms.
+
+## Acknowledgments
+
+- [Ink](https://github.com/JohnSundell/Ink) by John Sundell — fast, zero-dependency Markdown parser.
