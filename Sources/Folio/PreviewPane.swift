@@ -80,6 +80,9 @@ struct PreviewPane: NSViewRepresentable {
                     NSWorkspace.shared.open(url)
                     decisionHandler(.cancel)
                     return
+                case .deny:
+                    decisionHandler(.cancel)
+                    return
                 case .allowInWebView:
                     break
                 }

@@ -28,6 +28,17 @@ func runPreviewHTMLTests() {
         T.contains(doc, "clipboard") // copy-code button script is injected
     }
 
+    T.test("document includes strict Content-Security-Policy meta") {
+        let doc = PreviewHTML.document(title: "x", body: "<p>y</p>")
+        T.contains(doc, "Content-Security-Policy")
+        T.contains(doc, "default-src 'none'")   // hard floor: nothing loads unless allowlisted
+        T.contains(doc, "connect-src 'none'")   // no fetch/XHR/sendBeacon to attacker URLs
+        T.contains(doc, "form-action 'none'")   // no form-POST exfiltration
+        T.contains(doc, "base-uri 'none'")      // no <base href> URL hijacking
+        // Inline JS is still allowed so interactive HTML (and our copy-code-block script) work.
+        T.contains(doc, "script-src 'unsafe-inline'")
+    }
+
     T.test("escape neutralizes HTML metacharacters") {
         T.equal(PreviewHTML.escape("<a> & <b>"), "&lt;a&gt; &amp; &lt;b&gt;")
     }

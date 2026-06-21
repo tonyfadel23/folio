@@ -110,6 +110,25 @@ public struct PreviewHTML {
 
     // MARK: - Pure helpers (testable without disk)
 
+    /// Strict Content-Security-Policy injected into every preview document.
+    ///
+    /// Folio runs untrusted file contents (a markdown file may come from anywhere on disk).
+    /// JS stays enabled so interactive HTML (charts, calculators, prototypes) still works,
+    /// but every network-bound exfiltration channel is closed:
+    /// `connect-src 'none'` blocks fetch/XHR/sendBeacon; `img-src data: file:` blocks
+    /// `<img src="https://attacker">`; `form-action 'none'` blocks form-POST exfil; the
+    /// `default-src 'none'` floor blocks remote scripts/stylesheets/fonts; `base-uri 'none'`
+    /// blocks `<base>` URL hijacking. JS-driven navigation away to a remote URL is blocked
+    /// at a different layer (`LinkPolicy` in the WKNavigationDelegate).
+    public static let contentSecurityPolicy =
+        "default-src 'none'; " +
+        "img-src data: file:; " +
+        "style-src 'unsafe-inline'; " +
+        "script-src 'unsafe-inline'; " +
+        "connect-src 'none'; " +
+        "form-action 'none'; " +
+        "base-uri 'none';"
+
     /// Wrap an HTML `body` fragment in a full document with the embedded stylesheet.
     public static func document(title: String, body: String) -> String {
         """
@@ -117,6 +136,7 @@ public struct PreviewHTML {
         <html lang="en">
         <head>
         <meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy" content="\(contentSecurityPolicy)">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>\(escape(title))</title>
         <style>\(Styles.css)</style>

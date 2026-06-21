@@ -3,6 +3,19 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] — 2026-06-21 (security)
+
+Hardens the preview pane against malicious file contents while preserving JavaScript for interactive HTML (charts, prototypes, calculators).
+
+- Inject strict Content-Security-Policy into every preview document: `default-src 'none'; connect-src 'none'; form-action 'none'; base-uri 'none'; img-src data: file:; style-src 'unsafe-inline'; script-src 'unsafe-inline'`. This blocks every network-bound exfiltration channel (`fetch`, external `<img>`, external `<form>`, external `<style>`, external `<script>`) without disabling client-side interactivity.
+- Tighten `LinkPolicy`: `javascript:` and `data:` link clicks are now denied outright (previously rendered in-pane). Non-click navigations to `http(s)` are also denied, closing the silent exfiltration path that `<meta http-equiv="refresh">`, `window.open`, and JS-driven `document.location` changes would otherwise have used.
+- Add a third `LinkDecision.deny` case to `LinkPolicy` and route it through `PreviewPane.Coordinator` as `decisionHandler(.cancel)`.
+- Add `LinkPolicyTests` coverage for `javascript:`, `data:`, and meta-refresh-style non-click navigation.
+
+Reference: findings from the in-session security review covering `Sources/FolioCore/PreviewHTML.swift` and `Sources/FolioCore/LinkPolicy.swift`. Residual risk: a malicious preview file can still render in-pane phishing UI; clicks on such UI route through the strict link policy (denied, or opened in the user's actual browser where they have context to evaluate).
+
+[1.2.2]: https://github.com/tonyfadel23/folio/releases/tag/v1.2.2
+
 ## [1.2.1] — 2026-06-21
 
 Internal cleanup; no user-visible behavior changes.
