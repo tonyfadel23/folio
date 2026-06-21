@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import NativeMdCore
+import FolioCore
 
 /// The left pane: a search box, an "Open Folder" control, and the file/subfolder tree.
 /// While searching, the tree is replaced by a flat list of matching files (with their paths)

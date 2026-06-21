@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 private func kind(_ name: String) -> FileKind {
     FileKind(for: URL(fileURLWithPath: "/tmp/\(name)"))

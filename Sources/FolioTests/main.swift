@@ -1,5 +1,5 @@
 // Test runner entry point. Add new suites here as they are written.
-print("Running NativeMdCore tests…\n")
+print("Running FolioCore tests…\n")
 
 print("FileKind:")
 runFileKindTests()

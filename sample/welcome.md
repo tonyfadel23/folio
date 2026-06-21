@@ -1,6 +1,6 @@
-# NativeMd Demo
+# Folio Demo
 
-Welcome to **NativeMd** — a _super lightweight_ macOS file browser.
+Welcome to **Folio** — a _super lightweight_ macOS file browser.
 
 ## Features
 - Folder tree on the left
@@ -18,5 +18,3 @@ print(greeting)
 |------|----------|
 | MD   | ✅        |
 | HTML | ✅        |
-
-- live reload appended 1782025095

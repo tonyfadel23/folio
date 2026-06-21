@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 func runFileFilterTests() {
     let fm = FileManager.default

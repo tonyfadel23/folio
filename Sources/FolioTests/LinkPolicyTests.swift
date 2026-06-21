@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 private func url(_ s: String) -> URL { URL(string: s)! }
 

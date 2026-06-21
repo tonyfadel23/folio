@@ -1,6 +1,6 @@
 import SwiftUI
 import AppKit
-import NativeMdCore
+import FolioCore
 
 /// App-wide state: the loaded folder tree, the current selection, and live-reload plumbing.
 @MainActor
@@ -41,9 +41,9 @@ final class AppModel: ObservableObject {
     /// buttons (leaving only the system toggle) when collapsed.
     @Published var columnVisibility: NavigationSplitViewVisibility = .all
 
-    private let lastFolderKey = "NativeMd.lastFolderPath"
-    private let lastSelectionKey = "NativeMd.lastSelectionPath"
-    private let showHiddenKey = "NativeMd.showHidden"
+    private let lastFolderKey = "Folio.lastFolderPath"
+    private let lastSelectionKey = "Folio.lastSelectionPath"
+    private let showHiddenKey = "Folio.showHidden"
     private var watcher: FolderWatcher?
     private var knownURLs: Set<URL> = []
     /// Modification date of the currently-selected file, to detect when *it* (not some other

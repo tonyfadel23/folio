@@ -1,7 +1,7 @@
 import Foundation
 
 /// Minimal test harness — no XCTest (unavailable under Command Line Tools).
-/// Tests register themselves and run via `swift run NativeMdTests`.
+/// Tests register themselves and run via `swift run FolioTests`.
 enum T {
     private(set) static var failures: [String] = []
     private(set) static var checks = 0

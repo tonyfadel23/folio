@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct NativeMdApp: App {
+struct FolioApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var model = AppModel()
     @StateObject private var preview = PreviewController()

@@ -1,6 +1,6 @@
 import SwiftUI
 import WebKit
-import NativeMdCore
+import FolioCore
 
 /// Bridges SwiftUI controls (zoom, find bar, menu commands) to the live WKWebView,
 /// which is registered by `PreviewPane` once it is created.

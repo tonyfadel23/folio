@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "NativeMd",
+    name: "Folio",
     platforms: [
         .macOS(.v13)
     ],
@@ -11,18 +11,18 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "NativeMdCore",
+            name: "FolioCore",
             dependencies: ["Ink"]
         ),
         .executableTarget(
-            name: "NativeMd",
-            dependencies: ["NativeMdCore"]
+            name: "Folio",
+            dependencies: ["FolioCore"]
         ),
         // Command Line Tools (no full Xcode) does not ship XCTest, so `swift test`
-        // cannot run. Tests are a plain executable runner instead: `swift run NativeMdTests`.
+        // cannot run. Tests are a plain executable runner instead: `swift run FolioTests`.
         .executableTarget(
-            name: "NativeMdTests",
-            dependencies: ["NativeMdCore"]
+            name: "FolioTests",
+            dependencies: ["FolioCore"]
         )
     ]
 )

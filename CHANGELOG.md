@@ -3,6 +3,17 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] — 2026-06-21
+
+Internal cleanup; no user-visible behavior changes.
+
+- Renamed internal Swift targets `NativeMd`/`NativeMdCore`/`NativeMdTests` to `Folio`/`FolioCore`/`FolioTests` (the historical `NativeMd` was the pre-rebrand name).
+- Renamed bundle identifier from `com.tony.nativemd` to `com.tonyfadel.folio`.
+- Renamed `UserDefaults` keys from `NativeMd.*` to `Folio.*`.
+- Fixed `scripts/run.sh` (was trying to `open NativeMd.app`, which `bundle.sh` hadn't produced since the user-facing rename).
+
+[1.2.1]: https://github.com/tonyfadel23/folio/releases/tag/v1.2.1
+
 ## [1.2.0] — 2026-06-21
 
 First public release.

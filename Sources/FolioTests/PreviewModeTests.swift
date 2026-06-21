@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 func runPreviewModeTests() {
     T.test("formats with a rendered view offer a toggle; plain ones don't") {

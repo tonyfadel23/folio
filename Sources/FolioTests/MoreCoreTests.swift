@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 private func makeTree() -> (root: URL, node: FileNode) {
     let fm = FileManager.default

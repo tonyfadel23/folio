@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 func runPreviewZoomTests() {
     func near(_ a: Double, _ b: Double) -> Bool { abs(a - b) < 1e-9 }

@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 func runDelimitedTextTests() {
     T.test("parses simple comma rows") {

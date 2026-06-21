@@ -1,7 +1,7 @@
 import SwiftUI
 import WebKit
 import AppKit
-import NativeMdCore
+import FolioCore
 
 /// Right pane: renders the selected file via a single WKWebView.
 /// `reloadToken` forces a re-render (used by live reload) even when the file URL is unchanged.

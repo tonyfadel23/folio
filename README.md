@@ -26,8 +26,6 @@ it previews on the right:
 - **Remembers** the last folder, the last file you viewed, and the window size/position
 - Light & dark mode aware
 
-> The user-facing app is **Folio**; the internal Swift target/binary is still `NativeMd`.
-
 Built with SwiftUI + WKWebView. The release `.app` is ~0.5 MB and has **no runtime dependencies**
 (the only library, [Ink](https://github.com/JohnSundell/Ink) for Markdown, is statically linked).
 
@@ -51,7 +49,7 @@ Download the latest `Folio-x.y.z.dmg` from the [Releases page](https://github.co
 
 ```bash
 # Run the test suite (pure logic)
-swift run NativeMdTests
+swift run FolioTests
 
 # Build the app bundle and launch it
 bash scripts/run.sh
@@ -72,16 +70,16 @@ A `sample/` folder with one of each file type is included for a quick smoke test
 
 ```
 Sources/
-  NativeMdCore/   # pure, unit-tested logic (no UI)
+  FolioCore/      # pure, unit-tested logic (no UI)
     FileKind, FileNode (+ matchingFiles),   — tree model + classification + search
     FileTreeLoader
     MarkdownRenderer (Ink), PreviewHTML,    — preview payload building
     Styles, LinkPolicy                      — CSS + external-link routing
-  NativeMd/       # SwiftUI shell
-    NativeMdApp, AppModel, ContentView,
+  Folio/          # SwiftUI shell
+    FolioApp, AppModel, ContentView,
     SidebarView (NavigationSplitView + OutlineGroup + .searchable),
     PreviewPane (WKWebView + WKNavigationDelegate)
-  NativeMdTests/  # standalone test runner (see note below)
+  FolioTests/     # standalone test runner (see note below)
 Resources/        # AppIcon.icns
 scripts/          # bundle.sh, run.sh, make_icon.swift, make_iconset.sh
 ```
@@ -89,8 +87,8 @@ scripts/          # bundle.sh, run.sh, make_icon.swift, make_iconset.sh
 ## Testing note
 
 Command Line Tools (without full Xcode) does **not** ship XCTest, so `swift test` cannot run.
-Tests are therefore a plain executable target (`NativeMdTests`) with a tiny assertion harness,
-run via `swift run NativeMdTests` — same TDD workflow, no Xcode needed.
+Tests are therefore a plain executable target (`FolioTests`) with a tiny assertion harness,
+run via `swift run FolioTests` — same TDD workflow, no Xcode needed.
 
 ## Releasing
 

@@ -17,13 +17,13 @@ jobs:
         run: swift --version
 
       - name: Run tests
-        run: swift run NativeMdTests
+        run: swift run FolioTests
 
       - name: Build universal app bundle (smoke test)
         run: bash scripts/bundle.sh
 
       - name: Verify bundle layout
         run: |
-          test -x Folio.app/Contents/MacOS/NativeMd
+          test -x Folio.app/Contents/MacOS/Folio
           test -f Folio.app/Contents/Info.plist
-          lipo -archs Folio.app/Contents/MacOS/NativeMd | grep -q "x86_64 arm64\|arm64 x86_64"
+          lipo -archs Folio.app/Contents/MacOS/Folio | grep -q "x86_64 arm64\|arm64 x86_64"

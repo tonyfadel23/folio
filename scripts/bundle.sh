@@ -5,8 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 DISPLAY_NAME="Folio"          # user-facing name (Finder, menu bar, window)
-EXEC_NAME="NativeMd"          # SwiftPM product / binary name (internal)
-BUNDLE_ID="com.tony.nativemd"
+EXEC_NAME="Folio"             # SwiftPM product / binary name
+BUNDLE_ID="com.tonyfadel.folio"
 MIN_OS="13.0"
 APP_DIR="${DISPLAY_NAME}.app"
 ICON_SRC="Resources/AppIcon.icns"

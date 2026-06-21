@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 func runImageInlinerTests() {
     let fm = FileManager.default

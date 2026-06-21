@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 private func tempDir() -> URL {
     let dir = FileManager.default.temporaryDirectory

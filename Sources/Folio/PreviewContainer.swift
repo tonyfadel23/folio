@@ -1,5 +1,5 @@
 import SwiftUI
-import NativeMdCore
+import FolioCore
 
 /// The detail side: a format toggle (for Markdown/HTML), an optional find bar, and the preview.
 struct PreviewContainer: View {

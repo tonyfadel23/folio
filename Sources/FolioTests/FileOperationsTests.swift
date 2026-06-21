@@ -1,5 +1,5 @@
 import Foundation
-import NativeMdCore
+import FolioCore
 
 func runFileOperationsTests() {
     let fm = FileManager.default
