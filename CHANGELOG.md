@@ -3,6 +3,26 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-06-21
+
+Two new Settings: appearance (Light / Dark / System) and tab mode.
+
+### Appearance
+- New picker in Settings: Light / Dark / **System** (defaults to Dark on first install).
+- Affects both the AppKit chrome (`NSApp.appearance`) and the preview pane in lockstep.
+- Preview CSS refactored to CSS custom properties keyed off body classes (`body.theme-dark`, `body.theme-light`, and `@media (prefers-color-scheme: dark) body.theme-system`). Colors are defined once per theme; every rule reads via `var(--*)`.
+- The currently-open preview re-renders with the new theme as soon as the picker changes (via `reloadToken`).
+
+### Tab mode
+- New picker in Settings: **One at a time** (default; the existing single-preview behavior) or **In tabs**.
+- In tabs mode, clicking a file in the sidebar opens a new tab. Re-clicking an already-open file activates its existing tab (no duplicates).
+- Tab bar appears above the preview when at least one tab is open. Each tab shows the file's icon + name + close button.
+- Closing the active tab activates the neighboring tab (right-leaning), or clears the preview if it was the last.
+- Opening a new folder clears all tabs. Switching back to single mode collapses to the currently-active file. Tabs whose files disappear (rename/move/delete) are removed automatically.
+- No keyboard shortcuts in this release; deferred to a follow-up.
+
+[1.3.0]: https://github.com/tonyfadel23/folio/releases/tag/v1.3.0
+
 ## [1.2.2] — 2026-06-21 (security)
 
 Hardens the preview pane against malicious file contents while preserving JavaScript for interactive HTML (charts, prototypes, calculators).

@@ -9,6 +9,7 @@ struct PreviewPane: NSViewRepresentable {
     let file: FileNode?
     let reloadToken: Int
     let raw: Bool
+    let theme: Appearance
     let controller: PreviewController
 
     func makeCoordinator() -> Coordinator { Coordinator() }
@@ -21,14 +22,14 @@ struct PreviewPane: NSViewRepresentable {
         context.coordinator.webView = webView
         controller.webView = webView
         webView.pageZoom = controller.zoom
-        context.coordinator.render(file, token: reloadToken, raw: raw)
+        context.coordinator.render(file, token: reloadToken, raw: raw, theme: theme)
         return webView
     }
 
     func updateNSView(_ webView: WKWebView, context: Context) {
         controller.webView = webView
         webView.pageZoom = controller.zoom
-        context.coordinator.render(file, token: reloadToken, raw: raw)
+        context.coordinator.render(file, token: reloadToken, raw: raw, theme: theme)
     }
 
     /// Owns the webview, loads content, and applies `LinkPolicy` to navigations.
@@ -38,36 +39,41 @@ struct PreviewPane: NSViewRepresentable {
         private var lastLoaded: URL?
         private var lastToken: Int = -1
         private var lastRaw = false
+        private var lastTheme: Appearance = .system
 
-        func render(_ file: FileNode?, token: Int, raw: Bool) {
+        func render(_ file: FileNode?, token: Int, raw: Bool, theme: Appearance) {
             guard let webView else { return }
 
             guard let file, !file.isDirectory else {
-                if lastLoaded != nil || lastToken != token { loadPlaceholder("Select a file to preview") }
+                if lastLoaded != nil || lastToken != token || lastTheme != theme {
+                    loadPlaceholder("Select a file to preview", theme: theme)
+                }
                 lastLoaded = nil
                 lastToken = token
+                lastTheme = theme
                 return
             }
-            // Re-render if the file changed, the reload token advanced, or the raw/rendered mode flipped.
-            if lastLoaded == file.url && lastToken == token && lastRaw == raw { return }
+            // Re-render if the file changed, the reload token advanced, the raw/rendered mode flipped, or theme changed.
+            if lastLoaded == file.url && lastToken == token && lastRaw == raw && lastTheme == theme { return }
             lastLoaded = file.url
             lastToken = token
             lastRaw = raw
+            lastTheme = theme
 
             let baseURL = file.url.deletingLastPathComponent()
-            switch builder.build(for: file.url, raw: raw) {
+            switch builder.build(for: file.url, raw: raw, theme: theme) {
             case .html(let html):
                 webView.loadHTMLString(html, baseURL: baseURL)
             case .loadFile(let url):
                 webView.loadFileURL(url, allowingReadAccessTo: baseURL)
             case .empty(let message):
-                loadPlaceholder(message)
+                loadPlaceholder(message, theme: theme)
             }
         }
 
-        private func loadPlaceholder(_ message: String) {
+        private func loadPlaceholder(_ message: String, theme: Appearance) {
             let body = "<div class=\"nativemd-placeholder\">\(PreviewHTML.escape(message))</div>"
-            webView?.loadHTMLString(PreviewHTML.document(title: "Folio", body: body), baseURL: nil)
+            webView?.loadHTMLString(PreviewHTML.document(title: "Folio", body: body, theme: theme), baseURL: nil)
         }
 
         func webView(_ webView: WKWebView,

@@ -24,6 +24,10 @@ struct PreviewContainer: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if model.openInTabs && !model.openTabs.isEmpty {
+                tabBar
+                Divider()
+            }
             if controller.findVisible {
                 findBar
                 Divider()
@@ -31,6 +35,7 @@ struct PreviewContainer: View {
             PreviewPane(file: model.selectedFile,
                         reloadToken: model.reloadToken,
                         raw: raw,
+                        theme: model.appearance,
                         controller: controller)
         }
         .toolbar {
@@ -59,6 +64,52 @@ struct PreviewContainer: View {
         .onChange(of: controller.findVisible) { visible in
             if visible { findFocused = true }
         }
+    }
+
+    private var tabBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 2) {
+                ForEach(model.openTabs) { tab in
+                    tabItem(tab)
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
+        }
+        .background(.bar)
+    }
+
+    private func tabItem(_ tab: FileNode) -> some View {
+        let isActive = model.selection?.url == tab.url
+        return HStack(spacing: 6) {
+            Image(systemName: fileIcon(tab))
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+            Text(tab.name)
+                .font(.system(size: 12))
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Button {
+                model.closeTab(tab)
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .padding(3)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("Close tab")
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isActive ? Color.accentColor.opacity(0.22) : Color.gray.opacity(0.001))
+        )
+        .frame(maxWidth: 200)
+        .contentShape(Rectangle())
+        .onTapGesture { model.selection = tab }
     }
 
     private var findBar: some View {

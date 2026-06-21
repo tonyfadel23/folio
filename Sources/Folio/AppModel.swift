@@ -19,6 +19,11 @@ final class AppModel: ObservableObject {
             if let sel = selection, !sel.isDirectory {
                 UserDefaults.standard.set(sel.url.path, forKey: lastSelectionKey)
                 selectedModDate = Self.modificationDate(of: sel.url)
+                // In tabs mode, selecting a file (from sidebar or restore) also pins it as a tab.
+                // Clicking an existing tab is a no-op here because the file's URL is already present.
+                if openInTabs, !openTabs.contains(where: { $0.url == sel.url }) {
+                    openTabs.append(sel)
+                }
             } else {
                 selectedModDate = nil
             }
@@ -33,6 +38,38 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// User-facing appearance preference. Drives both `NSApp.appearance` (chrome) and the
+    /// CSS body class injected by `PreviewHTML.document(theme:)` (preview pane).
+    /// Default = `.dark` on fresh install (per design choice; not the macOS norm of system).
+    @Published var appearance: Appearance {
+        didSet {
+            UserDefaults.standard.set(appearance.rawValue, forKey: appearanceKey)
+            applyAppearance()
+            reloadToken &+= 1   // re-render the open preview with the new body class
+        }
+    }
+
+    /// When true, clicking a file in the sidebar opens it as a tab in the preview pane
+    /// (preserving any already-open files). When false, each click replaces the preview.
+    @Published var openInTabs: Bool {
+        didSet {
+            UserDefaults.standard.set(openInTabs, forKey: openInTabsKey)
+            if !openInTabs {
+                // Leaving tabs mode collapses to a single preview — drop all tabs except
+                // the active one (which already drives the preview via `selection`).
+                openTabs = openTabs.filter { $0.url == selection?.url }
+            } else if let sel = selection, !sel.isDirectory,
+                      !openTabs.contains(where: { $0.url == sel.url }) {
+                // Entering tabs mode pins the currently-selected file as the first tab.
+                openTabs.append(sel)
+            }
+        }
+    }
+
+    /// Currently open tabs in left-to-right order. Only meaningful when `openInTabs` is true.
+    /// `selection` is the active tab; closing it picks the neighboring tab as the new active.
+    @Published var openTabs: [FileNode] = []
+
     /// URLs of folders currently expanded in the sidebar tree. Kept here (not in OutlineGroup)
     /// so taps can toggle expansion and so expansion survives tree reloads.
     @Published var expandedFolders: Set<URL> = []
@@ -44,6 +81,8 @@ final class AppModel: ObservableObject {
     private let lastFolderKey = "Folio.lastFolderPath"
     private let lastSelectionKey = "Folio.lastSelectionPath"
     private let showHiddenKey = "Folio.showHidden"
+    private let appearanceKey = "Folio.appearance"
+    private let openInTabsKey = "Folio.openInTabs"
     private var watcher: FolderWatcher?
     private var knownURLs: Set<URL> = []
     /// Modification date of the currently-selected file, to detect when *it* (not some other
@@ -56,7 +95,41 @@ final class AppModel: ObservableObject {
 
     init() {
         showHidden = UserDefaults.standard.bool(forKey: showHiddenKey)
+        let appearanceRaw = UserDefaults.standard.string(forKey: appearanceKey) ?? Appearance.dark.rawValue
+        appearance = Appearance(rawValue: appearanceRaw) ?? .dark
+        openInTabs = UserDefaults.standard.bool(forKey: openInTabsKey)
+        applyAppearance()
         restoreLastFolder()
+    }
+
+    /// Apply the current `appearance` setting to the AppKit chrome.
+    /// `system` (`nil`) follows the user's macOS preference; `light`/`dark` force the choice.
+    private func applyAppearance() {
+        let nsAppearance: NSAppearance? = {
+            switch appearance {
+            case .system: return nil
+            case .light:  return NSAppearance(named: .aqua)
+            case .dark:   return NSAppearance(named: .darkAqua)
+            }
+        }()
+        DispatchQueue.main.async { NSApp.appearance = nsAppearance }
+    }
+
+    // MARK: - Tabs
+
+    /// Close `tab`. If it was active, select the neighboring tab (right-leaning), or clear
+    /// the preview if no tabs remain.
+    func closeTab(_ tab: FileNode) {
+        guard let idx = openTabs.firstIndex(where: { $0.url == tab.url }) else { return }
+        let wasActive = (selection?.url == tab.url)
+        openTabs.remove(at: idx)
+        guard wasActive else { return }
+        if openTabs.isEmpty {
+            selection = nil
+        } else {
+            let newIdx = min(idx, openTabs.count - 1)
+            selection = openTabs[newIdx]
+        }
     }
 
     var selectedFile: FileNode? {
@@ -90,6 +163,7 @@ final class AppModel: ObservableObject {
                 self.truncated = result.truncated
                 self.knownURLs = result.root.allURLs()
                 self.expandedFolders = [] // a freshly opened folder starts collapsed
+                self.openTabs = []        // new folder → fresh, empty tab set
                 self.selection = nil
                 self.isLoading = false
                 self.startWatching(url)
@@ -143,6 +217,8 @@ final class AppModel: ObservableObject {
                 self.knownURLs = urls
                 self.truncated = result.truncated
                 self.reloadToken &+= 1
+                // Drop tabs whose files no longer exist (deleted/moved-away); keeps tab bar honest.
+                self.openTabs = self.openTabs.compactMap { tab in result.root.node(withURL: tab.url) }
                 self.selection = resolved // atomic with root → no flicker
             }
         }

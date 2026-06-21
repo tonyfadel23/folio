@@ -13,6 +13,9 @@ runMarkdownRendererTests()
 print("\nLinkPolicy:")
 runLinkPolicyTests()
 
+print("\nAppearance:")
+runAppearanceTests()
+
 print("\nPreviewHTML:")
 runPreviewHTMLTests()
 

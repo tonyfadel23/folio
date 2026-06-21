@@ -246,11 +246,31 @@ struct SidebarView: View {
                 Text("v\(AppInfo.version)").font(.subheadline).foregroundStyle(.secondary)
             }
             Divider()
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Appearance").font(.subheadline)
+                Picker("Appearance", selection: $model.appearance) {
+                    ForEach(Appearance.allCases, id: \.self) { option in
+                        Text(option.displayName).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Open files").font(.subheadline)
+                Picker("Open files", selection: $model.openInTabs) {
+                    Text("One at a time").tag(false)
+                    Text("In tabs").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+            Divider()
             Toggle("Show hidden files & folders", isOn: $model.showHidden)
                 .toggleStyle(.switch)
         }
         .padding(16)
-        .frame(width: 280)
+        .frame(width: 320)
     }
 
     @ViewBuilder

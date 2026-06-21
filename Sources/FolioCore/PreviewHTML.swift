@@ -19,7 +19,7 @@ public struct PreviewHTML {
         self.markdown = MarkdownRenderer()
     }
 
-    public func build(for url: URL, raw: Bool = false) -> PreviewContent {
+    public func build(for url: URL, raw: Bool = false, theme: Appearance = .system) -> PreviewContent {
         let baseDir = url.deletingLastPathComponent()
         let kind = FileKind(for: url)
 
@@ -27,28 +27,29 @@ public struct PreviewHTML {
         if raw, kind.previewToggle != nil {
             guard let text = readText(url) else { return unreadable(url) }
             return .html(Self.document(title: url.lastPathComponent,
-                                       body: "<pre><code>\(Self.escape(text))</code></pre>"))
+                                       body: "<pre><code>\(Self.escape(text))</code></pre>",
+                                       theme: theme))
         }
 
         switch kind {
         case .markdown:
             guard let text = readText(url) else { return unreadable(url) }
             let body = Self.inlineLocalImages(in: markdown.html(from: text), baseDir: baseDir)
-            return .html(Self.document(title: url.lastPathComponent, body: body))
+            return .html(Self.document(title: url.lastPathComponent, body: body, theme: theme))
 
         case .html:
             guard let text = readText(url) else { return unreadable(url) }
             // Full HTML documents are wrapped too, so our base styles still apply as a fallback;
             // the file's own <head>/<style> (if any) take precedence in the cascade.
             let body = Self.inlineLocalImages(in: text, baseDir: baseDir)
-            return .html(Self.document(title: url.lastPathComponent, body: body))
+            return .html(Self.document(title: url.lastPathComponent, body: body, theme: theme))
 
         case .image, .svg:
             // SVG renders as an image (its raw "Code" view is handled above).
             let name = url.lastPathComponent
             let src = name.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? name
             let imgBody = "<div class=\"nativemd-image-page\"><img src=\"\(src)\" alt=\"\(Self.escape(name))\"></div>"
-            return .html(Self.document(title: name, body: Self.inlineLocalImages(in: imgBody, baseDir: baseDir)))
+            return .html(Self.document(title: name, body: Self.inlineLocalImages(in: imgBody, baseDir: baseDir), theme: theme))
 
         case .pdf:
             return .loadFile(url)
@@ -57,21 +58,21 @@ public struct PreviewHTML {
             guard let text = readText(url) else { return unreadable(url) }
             let delimiter: Character = url.pathExtension.lowercased() == "tsv" ? "\t" : ","
             let rows = DelimitedText.parse(text, delimiter: delimiter)
-            return .html(Self.document(title: url.lastPathComponent, body: Self.table(from: rows)))
+            return .html(Self.document(title: url.lastPathComponent, body: Self.table(from: rows), theme: theme))
 
         case .json:
             guard let text = readText(url) else { return unreadable(url) }
             let pretty = Self.prettyJSON(text) ?? text
-            return .html(Self.document(title: url.lastPathComponent, body: "<pre><code>\(Self.escape(pretty))</code></pre>"))
+            return .html(Self.document(title: url.lastPathComponent, body: "<pre><code>\(Self.escape(pretty))</code></pre>", theme: theme))
 
         case .xml:
             guard let text = readText(url) else { return unreadable(url) }
             let pretty = Self.prettyXML(text) ?? text
-            return .html(Self.document(title: url.lastPathComponent, body: "<pre><code>\(Self.escape(pretty))</code></pre>"))
+            return .html(Self.document(title: url.lastPathComponent, body: "<pre><code>\(Self.escape(pretty))</code></pre>", theme: theme))
 
         case .text:
             guard let text = readText(url) else { return unreadable(url) }
-            return .html(Self.document(title: url.lastPathComponent, body: "<pre><code>\(Self.escape(text))</code></pre>"))
+            return .html(Self.document(title: url.lastPathComponent, body: "<pre><code>\(Self.escape(text))</code></pre>", theme: theme))
 
         case .other:
             return .empty("No preview available for \(url.lastPathComponent)")
@@ -130,7 +131,9 @@ public struct PreviewHTML {
         "base-uri 'none';"
 
     /// Wrap an HTML `body` fragment in a full document with the embedded stylesheet.
-    public static func document(title: String, body: String) -> String {
+    /// The `theme` parameter controls the CSS class set on `<body>`, which keys the
+    /// stylesheet's per-theme palette (see `Styles.css`).
+    public static func document(title: String, body: String, theme: Appearance = .system) -> String {
         """
         <!DOCTYPE html>
         <html lang="en">
@@ -141,7 +144,7 @@ public struct PreviewHTML {
         <title>\(escape(title))</title>
         <style>\(Styles.css)</style>
         </head>
-        <body>
+        <body class="\(theme.cssBodyClass)">
         \(body)
         <script>\(copyButtonScript)</script>
         </body>
