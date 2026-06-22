@@ -63,6 +63,75 @@ cat > "${APP_DIR}/Contents/Info.plist" <<PLIST
     <key>NSPrincipalClass</key>        <string>NSApplication</string>
     <key>NSHighResolutionCapable</key> <true/>
     <key>NSHumanReadableCopyright</key> <string>© 2026 Tony Fadel. MIT Licensed.</string>
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>   <string>Markdown Document</string>
+            <key>CFBundleTypeRole</key>   <string>Viewer</string>
+            <key>LSHandlerRank</key>      <string>Owner</string>
+            <key>LSItemContentTypes</key>
+            <array><string>net.daringfireball.markdown</string></array>
+            <key>CFBundleTypeExtensions</key>
+            <array><string>md</string><string>markdown</string><string>mdown</string><string>mkd</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>   <string>HTML Document</string>
+            <key>CFBundleTypeRole</key>   <string>Viewer</string>
+            <key>LSHandlerRank</key>      <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>public.html</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>   <string>Text Document</string>
+            <key>CFBundleTypeRole</key>   <string>Viewer</string>
+            <key>LSHandlerRank</key>      <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.plain-text</string>
+                <string>public.source-code</string>
+                <string>public.json</string>
+                <string>public.xml</string>
+                <string>public.comma-separated-values-text</string>
+            </array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>   <string>Image</string>
+            <key>CFBundleTypeRole</key>   <string>Viewer</string>
+            <key>LSHandlerRank</key>      <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>public.image</string><string>public.svg-image</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>   <string>PDF Document</string>
+            <key>CFBundleTypeRole</key>   <string>Viewer</string>
+            <key>LSHandlerRank</key>      <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>com.adobe.pdf</string></array>
+        </dict>
+        <dict>
+            <key>CFBundleTypeName</key>   <string>Folder</string>
+            <key>CFBundleTypeRole</key>   <string>Viewer</string>
+            <key>LSHandlerRank</key>      <string>Alternate</string>
+            <key>LSItemContentTypes</key>
+            <array><string>public.folder</string></array>
+        </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+        <dict>
+            <key>UTTypeIdentifier</key>   <string>net.daringfireball.markdown</string>
+            <key>UTTypeDescription</key>  <string>Markdown Document</string>
+            <key>UTTypeConformsTo</key>
+            <array><string>public.plain-text</string></array>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array><string>md</string><string>markdown</string><string>mdown</string><string>mkd</string></array>
+                <key>public.mime-type</key>
+                <array><string>text/markdown</string></array>
+            </dict>
+        </dict>
+    </array>
 ${ICON_PLIST}
 </dict>
 </plist>

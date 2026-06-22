@@ -28,15 +28,15 @@ func runPreviewHTMLTests() {
         T.contains(doc, "clipboard") // copy-code button script is injected
     }
 
-    T.test("document includes strict Content-Security-Policy meta") {
+    T.test("document includes permissive Content-Security-Policy meta") {
         let doc = PreviewHTML.document(title: "x", body: "<p>y</p>")
         T.contains(doc, "Content-Security-Policy")
-        T.contains(doc, "default-src 'none'")   // hard floor: nothing loads unless allowlisted
-        T.contains(doc, "connect-src 'none'")   // no fetch/XHR/sendBeacon to attacker URLs
-        T.contains(doc, "form-action 'none'")   // no form-POST exfiltration
-        T.contains(doc, "base-uri 'none'")      // no <base href> URL hijacking
-        // Inline JS is still allowed so interactive HTML (and our copy-code-block script) work.
-        T.contains(doc, "script-src 'unsafe-inline'")
+        // Real-world HTML (CDN scripts, web fonts, remote images, fetch) must render, so
+        // scripts/styles/fonts/images/connections are allowed from any source, incl. eval.
+        T.contains(doc, "script-src * data: blob: 'unsafe-inline' 'unsafe-eval'")
+        T.contains(doc, "style-src * 'unsafe-inline'")
+        T.contains(doc, "connect-src *")
+        T.contains(doc, "img-src * data: blob: file:")
     }
 
     T.test("document's copy-button script surfaces a toast on success") {

@@ -3,6 +3,13 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+Open files directly, and render real-world HTML.
+
+- **Default-app support.** Folio now declares document types (`CFBundleDocumentTypes` + a Markdown UTI) for Markdown, HTML, text/source, JSON/XML/CSV, images, PDF, and folders. You can set it as the default opener for `.md` and friends in Finder → Get Info → "Open with". Double-clicking a file (or `open -a Folio file.md`, or dragging onto the Dock icon) opens its enclosing folder in the sidebar with that file selected — handled via `NSApplicationDelegate.application(_:open:)` → `AppModel.open(fileOrFolder:)`.
+- **Looser preview sandbox.** The preview's Content-Security-Policy was relaxed from a strict no-network floor to a permissive, browser-like policy: scripts, styles, web fonts, images, frames, and `fetch`/XHR now load from any source (incl. inline + `eval`), and `<iframe>` embeds are allowed to load. Pages that pull in CDN scripts (Tailwind, jQuery, charting libs) or remote assets render correctly instead of breaking. Top-level link clicks still open in your default browser via `LinkPolicy`. **Trade-off:** a previewed file can now reach the network — preview only files you trust.
+
 ## [1.5.0] — 2026-06-21
 
 UX polish: more visible copy feedback, and the raw/rendered toggle is now per-file.

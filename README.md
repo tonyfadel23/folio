@@ -9,7 +9,7 @@ its files and subfolders show as an expandable tree (always on the left). Select
 it previews on the right:
 
 - **Markdown** → rendered as nicely-styled HTML (incl. tables, strikethrough, task-list checkboxes, and a copy button on code blocks)
-- **HTML** → shown as a live web page; external links open in your default browser
+- **HTML** → shown as a live web page (CDN scripts, web fonts, remote images, and `<iframe>` embeds all load); external links open in your default browser
 - **Images** (png/jpg/gif/svg/webp/…) → shown inline
 - **PDF** → rendered natively
 - **Text / source code** → shown as styled, escaped text
@@ -23,6 +23,7 @@ it previews on the right:
 - **Format toggle** (right side of the title bar) → switch the selected file between rendered and source:
   Markdown **Formatted/Raw**, HTML **Website/Code**, CSV/TSV **Table/Raw**, JSON **Pretty/Raw**, XML/plist **Formatted/Raw**, SVG **Image/Code**
 - **Pinch-to-zoom** → trackpad pinch zooms any preview (images, web, docs); ⌘+/−/0 also work
+- **Open files directly** → set Folio as the default app for `.md`, `.html`, images, PDF, and more (Finder → Get Info → "Open with"); double-click a file, `open -a Folio file.md`, or drag onto the Dock icon to open its folder with the file selected
 - **Remembers** the last folder, the last file you viewed, and the window size/position
 - Light & dark mode aware
 
