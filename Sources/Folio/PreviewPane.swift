@@ -79,6 +79,13 @@ struct PreviewPane: NSViewRepresentable {
         func webView(_ webView: WKWebView,
                      decidePolicyFor navigationAction: WKNavigationAction,
                      decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+            // Let iframes/subframes load their own content (embedded widgets, sandboxed
+            // demos, CDN players). The external-link policy below is only meant to govern
+            // top-level navigation, so it must not block subframe loads.
+            if let target = navigationAction.targetFrame, !target.isMainFrame {
+                decisionHandler(.allow)
+                return
+            }
             let isLink = navigationAction.navigationType == .linkActivated
             if let url = navigationAction.request.url {
                 switch LinkPolicy.decide(for: url, isLinkActivation: isLink) {

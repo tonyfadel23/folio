@@ -90,6 +90,9 @@ final class AppModel: ObservableObject {
     private let openInTabsKey = "Folio.openInTabs"
     private var watcher: FolderWatcher?
     private var knownURLs: Set<URL> = []
+    /// A file the next `load` should select once its tree is ready (e.g. a file opened from
+    /// Finder / `open`). Takes precedence over the persisted last-selection restore.
+    private var requestedSelection: URL?
     /// Modification date of the currently-selected file, to detect when *it* (not some other
     /// file in the folder) changes on disk — so unrelated edits don't reload the open preview.
     private var selectedModDate: Date?
@@ -157,6 +160,20 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Open something handed to the app from outside (Finder double-click, `open` command,
+    /// drag onto the Dock icon). Folders load directly; a file loads its enclosing folder and
+    /// is selected in the preview, so the sidebar still works.
+    func open(fileOrFolder url: URL) {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir) else { return }
+        if isDir.boolValue {
+            load(url)
+        } else {
+            requestedSelection = url
+            load(url.deletingLastPathComponent())
+        }
+    }
+
     /// Load a folder's tree off the main thread, publish it, restore selection, and watch for changes.
     func load(_ url: URL) {
         isLoading = true
@@ -174,7 +191,15 @@ final class AppModel: ObservableObject {
                 self.selection = nil
                 self.isLoading = false
                 self.startWatching(url)
-                self.restoreSelection(in: result.root)
+                // A file opened from Finder/`open` wins over the persisted last selection.
+                if let requested = self.requestedSelection,
+                   let node = result.root.node(withURL: requested) {
+                    self.requestedSelection = nil
+                    self.selection = node
+                } else {
+                    self.requestedSelection = nil
+                    self.restoreSelection(in: result.root)
+                }
             }
         }
     }

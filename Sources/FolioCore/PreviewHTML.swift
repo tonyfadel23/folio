@@ -111,24 +111,28 @@ public struct PreviewHTML {
 
     // MARK: - Pure helpers (testable without disk)
 
-    /// Strict Content-Security-Policy injected into every preview document.
+    /// Permissive Content-Security-Policy injected into every preview document.
     ///
-    /// Folio runs untrusted file contents (a markdown file may come from anywhere on disk).
-    /// JS stays enabled so interactive HTML (charts, calculators, prototypes) still works,
-    /// but every network-bound exfiltration channel is closed:
-    /// `connect-src 'none'` blocks fetch/XHR/sendBeacon; `img-src data: file:` blocks
-    /// `<img src="https://attacker">`; `form-action 'none'` blocks form-POST exfil; the
-    /// `default-src 'none'` floor blocks remote scripts/stylesheets/fonts; `base-uri 'none'`
-    /// blocks `<base>` URL hijacking. JS-driven navigation away to a remote URL is blocked
-    /// at a different layer (`LinkPolicy` in the WKNavigationDelegate).
+    /// Folio aims to render real-world HTML the way a browser would: pages that pull in
+    /// CDN scripts (Tailwind, jQuery, charting libs…), web fonts, remote images, and that
+    /// use `fetch`/XHR or `eval`-based bundlers should "just work". So scripts, styles,
+    /// fonts, images, frames, and network connections are all allowed from any source
+    /// (`*`), including inline and `eval`.
+    ///
+    /// This trades away the old strict sandbox: a previewed file *can* now reach the network.
+    /// The remaining guard is at the navigation layer — `LinkPolicy` (in the
+    /// WKNavigationDelegate) still routes top-level link clicks to the user's browser and
+    /// blocks the preview from navigating itself away to a remote page — but subresource
+    /// loads are intentionally unrestricted so broken pages render correctly.
     public static let contentSecurityPolicy =
-        "default-src 'none'; " +
-        "img-src data: file:; " +
-        "style-src 'unsafe-inline'; " +
-        "script-src 'unsafe-inline'; " +
-        "connect-src 'none'; " +
-        "form-action 'none'; " +
-        "base-uri 'none';"
+        "default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; " +
+        "img-src * data: blob: file:; " +
+        "style-src * 'unsafe-inline'; " +
+        "script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; " +
+        "font-src * data:; " +
+        "connect-src * data: blob:; " +
+        "frame-src *; " +
+        "media-src * data: blob:;"
 
     /// Wrap an HTML `body` fragment in a full document with the embedded stylesheet.
     /// The `theme` parameter controls the CSS class set on `<body>`, which keys the
