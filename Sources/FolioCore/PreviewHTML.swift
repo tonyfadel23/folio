@@ -39,10 +39,14 @@ public struct PreviewHTML {
 
         case .html:
             guard let text = readText(url) else { return unreadable(url) }
-            // Full HTML documents are wrapped too, so our base styles still apply as a fallback;
-            // the file's own <head>/<style> (if any) take precedence in the cascade.
+            // HTML files are rendered with a neutral light wrapper regardless of the user's
+            // chosen app theme. The HTML is the user's *own document*, designed with its own
+            // colors — forcing Folio's dark palette over it would invert the page's design
+            // (a light-on-white website would suddenly become light-on-black). The page's
+            // own `<style>` or `@media (prefers-color-scheme)` rules still apply on top, so
+            // pages that support OS dark mode will adapt — exactly what a browser does.
             let body = Self.inlineLocalImages(in: text, baseDir: baseDir)
-            return .html(Self.document(title: url.lastPathComponent, body: body, theme: theme))
+            return .html(Self.document(title: url.lastPathComponent, body: body, theme: .light))
 
         case .image, .svg:
             // SVG renders as an image (its raw "Code" view is handled above).

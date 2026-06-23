@@ -3,12 +3,15 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.6.0] — 2026-06-23
 
-Open files directly, and render real-world HTML.
+Open files directly, render real-world HTML, and stop forcing user HTML into Folio's dark theme.
 
 - **Default-app support.** Folio now declares document types (`CFBundleDocumentTypes` + a Markdown UTI) for Markdown, HTML, text/source, JSON/XML/CSV, images, PDF, and folders. You can set it as the default opener for `.md` and friends in Finder → Get Info → "Open with". Double-clicking a file (or `open -a Folio file.md`, or dragging onto the Dock icon) opens its enclosing folder in the sidebar with that file selected — handled via `NSApplicationDelegate.application(_:open:)` → `AppModel.open(fileOrFolder:)`.
 - **Looser preview sandbox.** The preview's Content-Security-Policy was relaxed from a strict no-network floor to a permissive, browser-like policy: scripts, styles, web fonts, images, frames, and `fetch`/XHR now load from any source (incl. inline + `eval`), and `<iframe>` embeds are allowed to load. Pages that pull in CDN scripts (Tailwind, jQuery, charting libs) or remote assets render correctly instead of breaking. Top-level link clicks still open in your default browser via `LinkPolicy`. **Trade-off:** a previewed file can now reach the network — preview only files you trust.
+- **HTML preview no longer inherits the app theme.** Previously, if Folio was in Dark mode the wrapper imposed a dark background on every previewed HTML file, inverting websites' light designs. HTML previews now use a neutral light wrapper regardless of the app's appearance, letting the page's own CSS (and any `@media (prefers-color-scheme)` rules) win — matching what a browser would do. Markdown and other Folio-rendered previews still honor the user's chosen theme.
+
+[1.6.0]: https://github.com/tonyfadel23/folio/releases/tag/v1.6.0
 
 ## [1.5.0] — 2026-06-21
 

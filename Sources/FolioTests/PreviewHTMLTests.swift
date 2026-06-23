@@ -73,6 +73,29 @@ func runPreviewHTMLTests() {
         T.contains(html, "<p class=\"raw\">raw html</p>")
     }
 
+    T.test("HTML file renders with neutral light theme regardless of user's app theme") {
+        // A user-authored HTML file is the user's own design; Folio shouldn't impose its
+        // dark palette over the page (would invert a light-on-white website). The HTML's
+        // own CSS + @media queries still apply, so pages that support OS dark mode adapt
+        // — matching the browser experience.
+        let url = write("<p>page</p>", to: dir, named: "page.html")
+        guard case let .html(html) = builder.build(for: url, theme: .dark) else {
+            T.expect(false, "expected .html for html file"); return
+        }
+        T.contains(html, "<body class=\"theme-light\">")
+    }
+
+    T.test("Markdown file honors the user's chosen theme") {
+        // Markdown is Folio-rendered content (we generate the HTML from the file's bytes
+        // via Ink + our own template), so it *should* match the app's appearance — unlike
+        // the HTML case above, where the file owns its presentation.
+        let url = write("# hi", to: dir, named: "doc.md")
+        guard case let .html(html) = builder.build(for: url, theme: .dark) else {
+            T.expect(false, "expected .html for markdown file"); return
+        }
+        T.contains(html, "<body class=\"theme-dark\">")
+    }
+
     T.test("image file produces an img tag referencing the file name") {
         let url = write("not really a png", to: dir, named: "photo.png")
         guard case let .html(html) = builder.build(for: url) else {
