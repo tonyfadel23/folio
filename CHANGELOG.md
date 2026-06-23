@@ -3,6 +3,14 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] — 2026-06-23
+
+Bug fix: Markdown previews no longer render YAML frontmatter as raw text.
+
+- **Strip YAML frontmatter on render.** Files from Jekyll, Hugo, Astro, Obsidian, Claude Code skills, and similar tools start with a `---` block of metadata. Previously this rendered as a horizontal rule + a wall of `key: value` paragraphs at the top of the preview, drowning the actual content. `MarkdownRenderer` now detects the leading `---\n…\n---\n` pattern and strips it before parsing. A lone `---` on line 1 with no matching close is still treated as a thematic break (preserves standard markdown semantics). The Raw toggle continues to show the full source including the frontmatter, for power users who need to inspect or copy the YAML.
+
+[1.6.1]: https://github.com/tonyfadel23/folio/releases/tag/v1.6.1
+
 ## [1.6.0] — 2026-06-23
 
 Open files directly, render real-world HTML, and stop forcing user HTML into Folio's dark theme.
