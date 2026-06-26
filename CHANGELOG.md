@@ -3,6 +3,18 @@
 All notable changes to Folio are documented in this file. Versioning follows
 [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] — 2026-06-26
+
+Full-text search across the open folder.
+
+- **Search inside files, not just filenames.** Typing in the sidebar search box now finds matches *inside* every text-like file in the folder (markdown, html, json/xml/csv, source code, plain text). Results appear under "In files (N matches in M files)" alongside the existing "Files (N)" name matches.
+- **Each hit is one row** with the 1-based line number, the matching line text (trimmed), and the matched substring bolded. Click a hit to open the file in the preview; press ⌘F to jump to the exact location.
+- **Sorted by relevance.** Files with more matches surface first (stronger signal that the file is "about" the query), with alphabetical tiebreak.
+- **Bounded to stay fast.** Per-file cap of 5 hits, total cap of 200 matches across all results, per-file byte cap of 1 MiB (skips multi-MB logs and minified bundles). Reads happen off-main; a new keystroke cancels the in-flight task so the sidebar is responsive even on big folders.
+- **Architecture.** Pure search logic in `FolioCore.FileSearch` (sync, testable, no UI deps); `AppModel.performTextSearch(_:)` owns the async orchestration + cancellation; `SidebarView` renders the hits. `FileKind.isSearchable` decides which files to scan, so binary kinds (image, pdf, svg) are skipped before any I/O.
+
+[1.7.0]: https://github.com/tonyfadel23/folio/releases/tag/v1.7.0
+
 ## [1.6.1] — 2026-06-23
 
 Bug fix: Markdown previews no longer render YAML frontmatter as raw text.

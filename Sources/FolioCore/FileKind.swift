@@ -77,4 +77,14 @@ public enum FileKind: Equatable, Sendable {
         default: return nil
         }
     }
+
+    /// True when full-text searching the file's contents makes sense. Excludes binary
+    /// kinds (image, pdf, svg-as-binary, unknown) where reading bytes as UTF-8 would
+    /// produce gibberish hits.
+    public var isSearchable: Bool {
+        switch self {
+        case .markdown, .html, .csv, .json, .xml, .text: return true
+        case .image, .svg, .pdf, .other: return false
+        }
+    }
 }

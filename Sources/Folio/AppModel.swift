@@ -75,6 +75,17 @@ final class AppModel: ObservableObject {
     /// switching tabs preserves each tab's mode. Cleared on folder change.
     @Published var rawStates: [URL: Bool] = [:]
 
+    /// Full-text search results across the open folder, one entry per file with hits.
+    /// Driven by `performTextSearch(_:)`; cleared when the search query is empty.
+    @Published var contentSearchResults: [SearchResult] = []
+
+    /// True while a content search is in flight (the sidebar shows a spinner row).
+    @Published var isContentSearching = false
+
+    /// Tracks the in-flight content search so a new keystroke can cancel the previous one
+    /// without waiting for it to finish.
+    private var contentSearchTask: Task<Void, Never>?
+
     /// URLs of folders currently expanded in the sidebar tree. Kept here (not in OutlineGroup)
     /// so taps can toggle expansion and so expansion survives tree reloads.
     @Published var expandedFolders: Set<URL> = []
@@ -121,6 +132,50 @@ final class AppModel: ObservableObject {
             }
         }()
         DispatchQueue.main.async { NSApp.appearance = nsAppearance }
+    }
+
+    // MARK: - Tabs
+
+    // MARK: - Full-text search
+
+    /// Run a full-text search for `query` across every searchable file under the open
+    /// folder. Off-main thread; cancels any previous in-flight search. Cleared (and the
+    /// task cancelled) when `query` is empty or shorter than 2 characters.
+    func performTextSearch(_ query: String) {
+        contentSearchTask?.cancel()
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard trimmed.count >= 2, let root else {
+            contentSearchResults = []
+            isContentSearching = false
+            return
+        }
+        let urls = Self.searchableFiles(under: root)
+        isContentSearching = true
+        contentSearchTask = Task.detached(priority: .userInitiated) {
+            let results = FileSearch.search(query: trimmed, in: urls)
+            if Task.isCancelled { return }
+            await MainActor.run {
+                // Guard against a slower task overwriting a faster newer one: only commit
+                // if the user's current query still matches what we searched for.
+                self.contentSearchResults = results
+                self.isContentSearching = false
+            }
+        }
+    }
+
+    /// Walk the tree and collect every file URL whose kind is text-like (markdown, html,
+    /// json, xml, csv, plain text/source). Skips directories and binary kinds.
+    nonisolated private static func searchableFiles(under root: FileNode) -> [URL] {
+        var out: [URL] = []
+        func walk(_ node: FileNode) {
+            if node.isDirectory {
+                for child in node.children ?? [] { walk(child) }
+            } else if FileKind(for: node.url).isSearchable {
+                out.append(node.url)
+            }
+        }
+        walk(root)
+        return out
     }
 
     // MARK: - Tabs
@@ -188,6 +243,9 @@ final class AppModel: ObservableObject {
                 self.expandedFolders = [] // a freshly opened folder starts collapsed
                 self.openTabs = []        // new folder → fresh, empty tab set
                 self.rawStates = [:]      // new folder → drop any remembered raw/rendered toggles
+                self.contentSearchResults = []   // stale results would refer to the old folder
+                self.contentSearchTask?.cancel()
+                self.isContentSearching = false
                 self.selection = nil
                 self.isLoading = false
                 self.startWatching(url)

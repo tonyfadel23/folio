@@ -34,6 +34,11 @@ struct SidebarView: View {
                 emptyState
             }
         }
+        .onChange(of: query) { newValue in
+            // Kick off full-text search alongside the name-filter. AppModel debounces by
+            // cancelling the in-flight task when a fresh keystroke arrives.
+            model.performTextSearch(newValue)
+        }
         .safeAreaInset(edge: .bottom) {
             if model.truncated {
                 Label("Large folder — some items not shown", systemImage: "exclamationmark.triangle")
@@ -161,39 +166,124 @@ struct SidebarView: View {
     // MARK: - Flat search results
 
     private func searchResults(_ root: FileNode) -> some View {
-        let matches = root.matchingFiles(query: trimmedQuery)
+        let nameMatches = root.matchingFiles(query: trimmedQuery)
+        let contentMatches = model.contentSearchResults
+
         return Group {
-            if matches.isEmpty {
-                ContentUnavailableMessage(text: "No files match “\(trimmedQuery)”")
+            if nameMatches.isEmpty && contentMatches.isEmpty && !model.isContentSearching {
+                ContentUnavailableMessage(text: "No files or content match “\(trimmedQuery)”")
             } else {
                 List(selection: $model.selection) {
-                    Section("\(matches.count) match\(matches.count == 1 ? "" : "es")") {
-                        ForEach(matches) { node in
-                            HStack(spacing: 8) {
-                                Image(systemName: fileIcon(node))
-                                    .foregroundStyle(.secondary)
-                                    .frame(width: 16)
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(node.name).lineLimit(1)
-                                    let sub = relativeFolder(of: node, root: root)
-                                    if !sub.isEmpty {
-                                        Text(sub)
-                                            .font(.caption)
-                                            .foregroundStyle(.secondary)
-                                            .lineLimit(1)
+                    if !nameMatches.isEmpty {
+                        Section("Files (\(nameMatches.count))") {
+                            ForEach(nameMatches) { node in
+                                HStack(spacing: 8) {
+                                    Image(systemName: fileIcon(node))
+                                        .foregroundStyle(.secondary)
+                                        .frame(width: 16)
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(node.name).lineLimit(1)
+                                        let sub = relativeFolder(of: node, root: root)
+                                        if !sub.isEmpty {
+                                            Text(sub)
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                                .lineLimit(1)
+                                        }
                                     }
                                 }
+                                .opacity(isEffectivelyHidden(node, root: root) ? 0.45 : 1)
+                                .tag(node)
+                                .contextMenu { fileActions(for: node) }
+                                .draggable(node.url)
                             }
-                            .opacity(isEffectivelyHidden(node, root: root) ? 0.45 : 1)
-                            .tag(node)
-                            .contextMenu { fileActions(for: node) }
-                            .draggable(node.url)
+                        }
+                    }
+
+                    if model.isContentSearching {
+                        Section("In files") {
+                            HStack(spacing: 8) {
+                                ProgressView().controlSize(.small)
+                                Text("Searching contents…")
+                                    .font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    } else if !contentMatches.isEmpty {
+                        let totalHits = contentMatches.reduce(0) { $0 + $1.hits.count }
+                        Section("In files (\(totalHits) match\(totalHits == 1 ? "" : "es") in \(contentMatches.count) file\(contentMatches.count == 1 ? "" : "s"))") {
+                            ForEach(contentMatches) { result in
+                                contentMatchRow(result, root: root)
+                            }
                         }
                     }
                 }
                 .listStyle(.sidebar)
             }
         }
+    }
+
+    /// One file's worth of content-search rows: a filename header + one row per matching line.
+    /// Clicking a hit selects the file in the preview pane (so the user can ⌘F to jump to
+    /// the exact match if needed).
+    @ViewBuilder
+    private func contentMatchRow(_ result: SearchResult, root: FileNode) -> some View {
+        let node = model.root?.node(withURL: result.url)
+        let relPath = node.map { relativeFolder(of: $0, root: root) } ?? ""
+
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: node.map(fileIcon) ?? "doc")
+                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                Text(result.url.lastPathComponent)
+                    .font(.system(size: 12, weight: .semibold))
+                    .lineLimit(1)
+                if !relPath.isEmpty {
+                    Text(relPath)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
+            }
+            ForEach(result.hits, id: \.line) { hit in
+                snippetView(for: hit, query: trimmedQuery)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if let n = node { model.selection = n }
+                    }
+            }
+        }
+        .padding(.vertical, 2)
+    }
+
+    /// One matching line, with the matched substring bolded.
+    @ViewBuilder
+    private func snippetView(for hit: SearchHit, query: String) -> some View {
+        let displayLine = hit.text.trimmingCharacters(in: .whitespaces)
+        HStack(alignment: .top, spacing: 6) {
+            Text("\(hit.line)")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(.tertiary)
+                .frame(minWidth: 24, alignment: .trailing)
+            Text(attributedSnippet(displayLine, query: query))
+                .font(.system(size: 11))
+                .lineLimit(2)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.leading, 22)
+    }
+
+    /// Build an AttributedString with `query` highlighted (bold + primary color) inside
+    /// `line`. Returns the line unmodified if the match can't be located (shouldn't happen
+    /// since `FileSearch` only returns hits that contain the needle).
+    private func attributedSnippet(_ line: String, query: String) -> AttributedString {
+        var attr = AttributedString(line)
+        if let range = line.range(of: query, options: .caseInsensitive),
+           let attrRange = Range(range, in: attr) {
+            attr[attrRange].font = .system(size: 11, weight: .semibold)
+            attr[attrRange].foregroundColor = .primary
+        }
+        return attr
     }
 
     /// True if the node is hidden or lives anywhere inside a hidden (dot-prefixed) folder.

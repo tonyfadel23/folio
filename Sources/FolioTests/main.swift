@@ -19,6 +19,9 @@ runAppearanceTests()
 print("\nUpdateCheck:")
 runUpdateCheckTests()
 
+print("\nFileSearch:")
+runFileSearchTests()
+
 print("\nPreviewHTML:")
 runPreviewHTMLTests()
 
